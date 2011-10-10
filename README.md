@@ -1,0 +1,1 @@
+man/redis_log_pipe.1.markdown

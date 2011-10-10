@@ -1,0 +1,39 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "REDIS_LOG_PIPE" "1" "October 2011" "redis_pipe" "redis_pipe Manual"
+.
+.SH "NAME"
+\fBredis_log_pipe\fR \- a Redis client in Bash
+.
+.SH "SYNOPSIS"
+\fBredis_log_pipe\fR \fIkey\fR \fIline\fR
+.
+.SH "DESCRIPTION"
+\fBredis\.bash\fR accepts log lines on STDIN and pipes them to a Redis \fIhttp://redis\.io/\fR server\. Use REDIS_LOG_HOST environment variable to configure the redis host string\.
+.
+.SH "CAVEATS"
+requires a bash with /dev/tcp enabled\.
+.
+.SH "EXIT VALUES"
+.
+.TP
+0
+Success
+.
+.TP
+1
+Redis error
+.
+.TP
+2
+Unknown response
+.
+.SH "COPYRIGHT"
+redis_log_pipe is Copyright (C) 2011 Rein Henrichs http://reinh\.com
+.
+.IP "\(bu" 4
+Rein Henrichs: \fIreinh@reinh\.com\fR
+.
+.IP "" 0
+
