@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+#
+# resis_log_pipe - Pipe logs from STDIN to a redis list with the provided key.
+#
+# usage: [RETENTION=<retention>] [REDIS_LOG_HOST=[<password>@]<host>:<port>] redis_log_pipe <key>
+#
+# Defaults to 127.0.0.1:6379 if REDIS_LOG_HOST is not specified.
+#
+# Publishes log messages received on standard in to a redis server with the following schema:
+#   $key          - LPUSH to a LIST of log messages, trimmed to $RETENTION, used for tailing
+#   channels.$key - PUBLISH to a Pub/Sub channel, consumed by f.e. LogStash
+#
+# CAVEATS
+#
+# - requires a bash with /dev/tcp enabled. Older debians/Ubuntus disabled /dev/tcp.
+
+# Number of log lines to keep. Taken from env, defaults to 250
+RETENTION=${RETENTION:-250}
+
+usage() {
+    echo 'usage: [RETENTION=<retention>] [REDIS_LOG_HOST=[<password>@]<host>:<port>] redis_log_pipe <key>'
+    exit 1
+}
+
+[ -n "$1" ] || usage
+
+key=$1
+
+# Redis host/port defaults to 127.0.0.1:6379
+REDIS_LOG_HOST=${REDIS_LOG_HOST:-127.0.0.1:6379}
+
+# Set PASSWORD and HOST_PORT from REDIS_LOG_HOST
+
+# Password is anything before the @
+PASSWORD=${REDIS_LOG_HOST%@*}
+
+# Unset password if no @ found (substitution not performed).
+[ $PASSWORD = $REDIS_LOG_HOST ] && PASSWORD=
+
+# Host and port are everything after the @.
+HOST_PORT=${REDIS_LOG_HOST#*@}
+
+# Substitution because /dev/tcp expects host/port, not host:port.
+HOST_PORT=${HOST_PORT/:/\/}
+
+# From redis.bash: http://github.com/reinh/redis.bash, modified slightly for
+# our needs.
+redis() {
+    # Make TCP request to Redis using numerical fd 3
+    exec 3<>/dev/tcp/${HOST_PORT/:/\/}
+
+    # Authenticate with AUTH $PASSWORD if required. Will print error and exit
+    # on failure.
+    if [ -n $PASSWORD ]; then
+        local AUTH_COMMAND=$(redis_command AUTH "$PASSWORD")
+
+        # sleep to avoid a socket close race condition. NOT ideal.
+        { printf $AUTH_COMMAND; sleep 0.01; } >&3
+
+        # Only need to handle an auth error here.
+        read -r response <&3
+        case $response in
+            -*) # Error
+                echo "${response#-}"
+                exit 1
+                ;;
+        esac
+    fi
+
+    local COMMAND=$(redis_command "$@")
+
+    # sleep to avoid a socket close race condition. NOT ideal.
+    { printf "$COMMAND"; sleep 0.01; } >&3
+
+    # Parse the response according to redis protocol
+    read -r response <&3
+    case $response in
+        +*) # Status
+            echo "${response#+}"
+            ;;
+        -*) # Error
+            echo "${response#-}"
+            exit 1
+            ;;
+        :*) # Integer
+            echo "${response#:}"
+            ;;
+        \$*) # Bulk reply
+            nchars="${response#\$}"
+            nchars="${nchars%\r}"
+            read -n $nchars response <&3
+            echo $response
+            ;;
+        *) # net yet handled
+            echo "ERR - Unknown response\n"
+            exit 2
+            ;;
+    esac
+}
+
+# Build a redis command from the args according to the redis protocol
+# (See http://code.google.com/p/redis/wiki/ProtocolSpecification)
+redis_command() {
+    local CRLF="\r\n"
+
+    local COMMAND="*$#${CRLF}"
+    for arg in "$@"; do
+        COMMAND="${COMMAND}\$${#arg}${CRLF}${arg}${CRLF}"
+    done
+    echo $COMMAND
+}
+
+# 1. Push the line into the $key list for tailing
+# 2. Trim the list for size
+# 3. Publish the line to channels.$key for Pub/Sub
+while read -r line; do
+    echo -n "Push line. New length: "
+    redis LPUSH $key "$line"
+
+    echo -n "Trim list to $RETENTION: "
+    redis LTRIM $key 0 $(( $RETENTION - 1 ))
+
+    echo -n "Publish line. Subscribed: "
+    redis PUBLISH "channels.$key" "$line"
+done
+
+# vim: ft=sh:sw=4:ts=4:sts=4
