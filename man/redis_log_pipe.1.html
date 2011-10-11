@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv='content-type' value='text/html;charset=utf8'>
   <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
-  <title>redis_log_pipe(1) - a Redis client in Bash</title>
+  <title>redis_log_pipe(1) - Pipe log lines from STDIN to redis</title>
   <style type='text/css' media='all'>
   /* style: man */
   body#manpage {margin:0}
@@ -60,10 +60,10 @@
 
   <div class='man-navigation' style='display:none'>
     <a href="#NAME">NAME</a>
-    <a href="#SYNOPSIS">SYNOPSIS</a>
     <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#ARGUMENTS">ARGUMENTS</a>
+    <a href="#ENVIRONMENT-VARIABLES">ENVIRONMENT VARIABLES</a>
     <a href="#CAVEATS">CAVEATS</a>
-    <a href="#EXIT-VALUES">EXIT VALUES</a>
     <a href="#COPYRIGHT">COPYRIGHT</a>
   </div>
 
@@ -75,33 +75,50 @@
 
   <h2 id="NAME">NAME</h2>
 <p class="man-name">
-  <code>redis_log_pipe</code> - <span class="man-whatis">a Redis client in Bash</span>
+  <code>redis_log_pipe</code> - <span class="man-whatis">Pipe log lines from STDIN to redis</span>
 </p>
 
 <!-- To update README.md: edit man/redis_log_pipe.1.ronn and run `rake man` -->
 
 
-<h2 id="SYNOPSIS">SYNOPSIS</h2>
-
-<p><code>redis_log_pipe</code> <var>key</var> <var>line</var></p>
-
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
-<p><strong>redis.bash</strong> accepts log lines on STDIN and pipes them to a
-<a href="http://redis.io/">Redis</a> server. Use REDIS_LOG_HOST environment variable to
-configure the redis host string.</p>
+<p>redis_log_pipe takes log lines on STDIN and pipes them to <a href="http://redis.io">redis</a>.</p>
+
+<p>It connects to a redis server located at <var>REDIS_LOG_HOST</var> (default: 127.0.0.1:6379).</p>
+
+<p>It <a href="http://redis.io/commands/lpush">LPUSHes</a> them to a
+<a href="http://redis.io/topics/data-types">LIST</a> called "<var>key</var>".  It trims the list to
+<var>RETENTION</var> (default: 250) using <a href="http://redis.io/commands/ltrim">LTRIM</a>.  It
+also <a href="http://redis.io/commands/publish">PUBLISHes</a> them to a
+<a href="http://redis.io/topics/pubsub">channel</a> called "channels.<var>key</var>".</p>
+
+<h2 id="ARGUMENTS">ARGUMENTS</h2>
+
+<dl>
+<dt class="flush">key</dt><dd><p>The redis key to use for the list.</p>
+
+<p>By convention, the log will be published to a channel named channels.<var>key</var> as well.</p></dd>
+</dl>
+
+
+<h2 id="ENVIRONMENT-VARIABLES">ENVIRONMENT VARIABLES</h2>
+
+<dl>
+<dt>REDIS_LOG_HOST</dt><dd><p>[<var>password</var>@]<var>host</var>:<var>port</var></p>
+
+<p>The redis password, host and port. Password optional.<br />
+Default: 127.0.0.1:6379</p></dd>
+<dt>RETENTION</dt><dd><p>Number of log lines to retain in the list for tailing.<br />
+Default: 250</p></dd>
+</dl>
+
 
 <h2 id="CAVEATS">CAVEATS</h2>
 
-<p> requires a bash with /dev/tcp enabled.</p>
-
-<h2 id="EXIT-VALUES">EXIT VALUES</h2>
-
-<dl>
-<dt class="flush">0</dt><dd><p>Success</p></dd>
-<dt class="flush">1</dt><dd><p>Redis error</p></dd>
-<dt class="flush">2</dt><dd><p>Unknown response</p></dd>
-</dl>
+<ul>
+<li>requires a bash with /dev/tcp enabled.</li>
+</ul>
 
 
 <h2 id="COPYRIGHT">COPYRIGHT</h2>
@@ -109,7 +126,7 @@ configure the redis host string.</p>
 <p>redis_log_pipe is Copyright (C) 2011 Rein Henrichs http://reinh.com</p>
 
 <ul>
-<li>Rein Henrichs: <a href="&#109;&#97;&#x69;&#x6c;&#116;&#111;&#x3a;&#x72;&#x65;&#105;&#110;&#104;&#x40;&#x72;&#101;&#x69;&#x6e;&#x68;&#46;&#x63;&#x6f;&#x6d;" data-bare-link="true">&#114;&#x65;&#x69;&#x6e;&#104;&#64;&#x72;&#101;&#105;&#x6e;&#104;&#x2e;&#99;&#111;&#x6d;</a></li>
+<li>Rein Henrichs: <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#x3a;&#114;&#101;&#105;&#110;&#x68;&#64;&#x72;&#101;&#105;&#x6e;&#104;&#46;&#99;&#x6f;&#109;" data-bare-link="true">&#114;&#101;&#105;&#110;&#104;&#x40;&#x72;&#x65;&#105;&#x6e;&#x68;&#x2e;&#99;&#x6f;&#x6d;</a></li>
 </ul>
 
 

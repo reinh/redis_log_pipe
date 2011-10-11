@@ -4,30 +4,51 @@
 .TH "REDIS_LOG_PIPE" "1" "October 2011" "redis_pipe" "redis_pipe Manual"
 .
 .SH "NAME"
-\fBredis_log_pipe\fR \- a Redis client in Bash
-.
-.SH "SYNOPSIS"
-\fBredis_log_pipe\fR \fIkey\fR \fIline\fR
+\fBredis_log_pipe\fR \- Pipe log lines from STDIN to redis
 .
 .SH "DESCRIPTION"
-\fBredis\.bash\fR accepts log lines on STDIN and pipes them to a Redis \fIhttp://redis\.io/\fR server\. Use REDIS_LOG_HOST environment variable to configure the redis host string\.
+redis_log_pipe takes log lines on STDIN and pipes them to redis \fIhttp://redis\.io\fR\.
+.
+.P
+It connects to a redis server located at \fIREDIS_LOG_HOST\fR (default: 127\.0\.0\.1:6379)\.
+.
+.P
+It LPUSHes \fIhttp://redis\.io/commands/lpush\fR them to a LIST \fIhttp://redis\.io/topics/data\-types\fR called "\fIkey\fR"\. It trims the list to \fIRETENTION\fR (default: 250) using LTRIM \fIhttp://redis\.io/commands/ltrim\fR\. It also PUBLISHes \fIhttp://redis\.io/commands/publish\fR them to a channel \fIhttp://redis\.io/topics/pubsub\fR called "channels\.\fIkey\fR"\.
+.
+.SH "ARGUMENTS"
+.
+.TP
+key
+The redis key to use for the list\.
+.
+.IP
+By convention, the log will be published to a channel named channels\.\fIkey\fR as well\.
+.
+.SH "ENVIRONMENT VARIABLES"
+.
+.TP
+REDIS_LOG_HOST
+[\fIpassword\fR@]\fIhost\fR:\fIport\fR
+.
+.IP
+The redis password, host and port\. Password optional\.
+.
+.br
+Default: 127\.0\.0\.1:6379
+.
+.TP
+RETENTION
+Number of log lines to retain in the list for tailing\.
+.
+.br
+Default: 250
 .
 .SH "CAVEATS"
+.
+.IP "\(bu" 4
 requires a bash with /dev/tcp enabled\.
 .
-.SH "EXIT VALUES"
-.
-.TP
-0
-Success
-.
-.TP
-1
-Redis error
-.
-.TP
-2
-Unknown response
+.IP "" 0
 .
 .SH "COPYRIGHT"
 redis_log_pipe is Copyright (C) 2011 Rein Henrichs http://reinh\.com
