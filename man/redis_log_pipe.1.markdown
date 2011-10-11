@@ -47,10 +47,18 @@ LICENSE
 
 MIT. See [LICENSE](https://github.com/reinh/redis_log_pipe/blob/master/LICENSE)
 
+SOURCE
+------
+
+Source available at [http://github.com/reinh/redis_log_pipe](http://github.com/reinh/redis_log_pipe).
+
 COPYRIGHT
-------------
+---------
 
 redis_log_pipe is Copyright (C) 2011 Rein Henrichs http://reinh.com
+
+AUTHORS
+-------
 
 - Rein Henrichs: <reinh@reinh.com>
 

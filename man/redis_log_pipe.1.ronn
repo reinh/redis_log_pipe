@@ -47,6 +47,11 @@ LICENSE
 
 MIT. See [LICENSE](https://github.com/reinh/redis_log_pipe/blob/master/LICENSE)
 
+SOURCE
+------
+
+Source available at [http://github.com/reinh/redis_log_pipe](http://github.com/reinh/redis_log_pipe).
+
 COPYRIGHT
 ---------
 
