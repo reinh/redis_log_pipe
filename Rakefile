@@ -9,4 +9,13 @@ task :man do
   sh "ronn -w -s toc -r5 --markdown man/*.ronn"
 end
 
+desc 'Build the github pages index'
+task :gh_pages do
+  require 'ronn'
+  ENV['RONN_MANUAL']  = "redis_pipe Manual"
+  ENV['RONN_ORGANIZATION'] = "redis_pipe"
+  sh "ronn -w -s toc -5 man/*.ronn --pipe > pages/index.html"
+  sh "cd pages && git add index.html && git commit -m 'Update gh-pages' && git push"
+end
+
 task :default => :man
