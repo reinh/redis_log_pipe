@@ -42,6 +42,11 @@ CAVEATS
 
  * requires a bash with /dev/tcp enabled.
 
+LICENSE
+-------
+
+MIT. See [LICENSE](https://github.com/reinh/redis_log_pipe/blob/master/LICENSE)
+
 COPYRIGHT
 ------------
 
